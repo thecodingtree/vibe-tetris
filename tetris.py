@@ -190,6 +190,7 @@ class Tetromino:
     def draw(self, surface):
         """Draw the tetromino on the surface"""
         for x, y in self.get_rotated_shape():
+            # Main block color
             pygame.draw.rect(
                 surface,
                 self.color,
@@ -201,15 +202,73 @@ class Tetromino:
                 )
             )
 
+            # Highlight (top and left edges)
+            highlight_color = tuple(min(c + 70, 255) for c in self.color[:3])
+            pygame.draw.line(
+                surface,
+                highlight_color,
+                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE,
+                 GAME_AREA_START_Y + (self.y + y) * GRID_SIZE),
+                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE,
+                 GAME_AREA_START_Y + (self.y + y) * GRID_SIZE + GRID_SIZE - 2),
+                2
+            )
+            pygame.draw.line(
+                surface,
+                highlight_color,
+                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE,
+                 GAME_AREA_START_Y + (self.y + y) * GRID_SIZE),
+                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE + GRID_SIZE -
+                 2, GAME_AREA_START_Y + (self.y + y) * GRID_SIZE),
+                2
+            )
+
+            # Shadow (bottom and right edges)
+            shadow_color = tuple(max(c - 70, 0) for c in self.color[:3])
+            pygame.draw.line(
+                surface,
+                shadow_color,
+                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE + GRID_SIZE -
+                 2, GAME_AREA_START_Y + (self.y + y) * GRID_SIZE),
+                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE + GRID_SIZE - 2,
+                 GAME_AREA_START_Y + (self.y + y) * GRID_SIZE + GRID_SIZE - 2),
+                2
+            )
+            pygame.draw.line(
+                surface,
+                shadow_color,
+                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE,
+                 GAME_AREA_START_Y + (self.y + y) * GRID_SIZE + GRID_SIZE - 2),
+                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE + GRID_SIZE - 2,
+                 GAME_AREA_START_Y + (self.y + y) * GRID_SIZE + GRID_SIZE - 2),
+                2
+            )
+
     def draw_ghost(self, surface, board):
         """Draw the ghost of the tetromino (showing where it will land)"""
         ghost_x, ghost_y = self.get_ghost_position(board)
 
         for x, y in self.get_rotated_shape():
+            ghost_color = (*[c // 3 for c in self.color[:3]], 128)
+
+            # Semi-transparent fill
             pygame.draw.rect(
                 surface,
-                # Semi-transparent, darker color
-                (*[c // 3 for c in self.color[:3]], 128),
+                ghost_color,
+                (
+                    GAME_AREA_START_X + (ghost_x + x) * GRID_SIZE,
+                    GAME_AREA_START_Y + (ghost_y + y) * GRID_SIZE,
+                    GRID_SIZE - 1,
+                    GRID_SIZE - 1
+                ),
+                0  # Filled
+            )
+
+            # Add subtle 3D effect with lighter border
+            border_color = (*[min(c + 40, 255) for c in ghost_color[:3]], 160)
+            pygame.draw.rect(
+                surface,
+                border_color,
                 (
                     GAME_AREA_START_X + (ghost_x + x) * GRID_SIZE,
                     GAME_AREA_START_Y + (ghost_y + y) * GRID_SIZE,
@@ -533,6 +592,7 @@ class TetrisGame:
                         b = int(color[2] + (255 - color[2]) * flash_intensity)
                         color = (r, g, b)
 
+                # Main block color
                 pygame.draw.rect(
                     self.screen,
                     color,
@@ -543,6 +603,51 @@ class TetrisGame:
                         GRID_SIZE - 1
                     )
                 )
+
+                # Only add 3D effects to colored blocks (not BLACK)
+                if color != BLACK:
+                    # Highlight (top and left edges)
+                    highlight_color = tuple(min(c + 70, 255)
+                                            for c in color[:3])
+                    pygame.draw.line(
+                        self.screen,
+                        highlight_color,
+                        (GAME_AREA_START_X + x * GRID_SIZE,
+                         GAME_AREA_START_Y + y * GRID_SIZE),
+                        (GAME_AREA_START_X + x * GRID_SIZE,
+                         GAME_AREA_START_Y + y * GRID_SIZE + GRID_SIZE - 2),
+                        2
+                    )
+                    pygame.draw.line(
+                        self.screen,
+                        highlight_color,
+                        (GAME_AREA_START_X + x * GRID_SIZE,
+                         GAME_AREA_START_Y + y * GRID_SIZE),
+                        (GAME_AREA_START_X + x * GRID_SIZE + GRID_SIZE -
+                         2, GAME_AREA_START_Y + y * GRID_SIZE),
+                        2
+                    )
+
+                    # Shadow (bottom and right edges)
+                    shadow_color = tuple(max(c - 70, 0) for c in color[:3])
+                    pygame.draw.line(
+                        self.screen,
+                        shadow_color,
+                        (GAME_AREA_START_X + x * GRID_SIZE + GRID_SIZE -
+                         2, GAME_AREA_START_Y + y * GRID_SIZE),
+                        (GAME_AREA_START_X + x * GRID_SIZE + GRID_SIZE - 2,
+                         GAME_AREA_START_Y + y * GRID_SIZE + GRID_SIZE - 2),
+                        2
+                    )
+                    pygame.draw.line(
+                        self.screen,
+                        shadow_color,
+                        (GAME_AREA_START_X + x * GRID_SIZE,
+                         GAME_AREA_START_Y + y * GRID_SIZE + GRID_SIZE - 2),
+                        (GAME_AREA_START_X + x * GRID_SIZE + GRID_SIZE - 2,
+                         GAME_AREA_START_Y + y * GRID_SIZE + GRID_SIZE - 2),
+                        2
+                    )
 
         # Draw the ghost piece to show where the current piece will land
         if not self.game_over and not self.paused:
@@ -578,6 +683,7 @@ class TetrisGame:
             piece_center_y = GAME_AREA_START_Y - 60
 
             for x, y in self.held_piece.shape:
+                # Main block color
                 pygame.draw.rect(
                     self.screen,
                     self.held_piece.color,
@@ -587,6 +693,50 @@ class TetrisGame:
                         GRID_SIZE - 1,
                         GRID_SIZE - 1
                     )
+                )
+
+                # Highlight (top and left edges)
+                highlight_color = tuple(min(c + 70, 255)
+                                        for c in self.held_piece.color[:3])
+                pygame.draw.line(
+                    self.screen,
+                    highlight_color,
+                    (piece_center_x + x * GRID_SIZE,
+                     piece_center_y + y * GRID_SIZE),
+                    (piece_center_x + x * GRID_SIZE,
+                     piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
+                    2
+                )
+                pygame.draw.line(
+                    self.screen,
+                    highlight_color,
+                    (piece_center_x + x * GRID_SIZE,
+                     piece_center_y + y * GRID_SIZE),
+                    (piece_center_x + x * GRID_SIZE + GRID_SIZE -
+                     2, piece_center_y + y * GRID_SIZE),
+                    2
+                )
+
+                # Shadow (bottom and right edges)
+                shadow_color = tuple(max(c - 70, 0)
+                                     for c in self.held_piece.color[:3])
+                pygame.draw.line(
+                    self.screen,
+                    shadow_color,
+                    (piece_center_x + x * GRID_SIZE + GRID_SIZE -
+                     2, piece_center_y + y * GRID_SIZE),
+                    (piece_center_x + x * GRID_SIZE + GRID_SIZE - 2,
+                     piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
+                    2
+                )
+                pygame.draw.line(
+                    self.screen,
+                    shadow_color,
+                    (piece_center_x + x * GRID_SIZE,
+                     piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
+                    (piece_center_x + x * GRID_SIZE + GRID_SIZE - 2,
+                     piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
+                    2
                 )
 
         # Draw next piece box
@@ -611,6 +761,7 @@ class TetrisGame:
         piece_center_y = GAME_AREA_START_Y + 100
 
         for x, y in self.next_piece.shape:
+            # Main block color
             pygame.draw.rect(
                 self.screen,
                 self.next_piece.color,
@@ -620,6 +771,48 @@ class TetrisGame:
                     GRID_SIZE - 1,
                     GRID_SIZE - 1
                 )
+            )
+
+            # Highlight (top and left edges)
+            highlight_color = tuple(min(c + 70, 255)
+                                    for c in self.next_piece.color[:3])
+            pygame.draw.line(
+                self.screen,
+                highlight_color,
+                (piece_center_x + x * GRID_SIZE, piece_center_y + y * GRID_SIZE),
+                (piece_center_x + x * GRID_SIZE,
+                 piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
+                2
+            )
+            pygame.draw.line(
+                self.screen,
+                highlight_color,
+                (piece_center_x + x * GRID_SIZE, piece_center_y + y * GRID_SIZE),
+                (piece_center_x + x * GRID_SIZE + GRID_SIZE -
+                 2, piece_center_y + y * GRID_SIZE),
+                2
+            )
+
+            # Shadow (bottom and right edges)
+            shadow_color = tuple(max(c - 70, 0)
+                                 for c in self.next_piece.color[:3])
+            pygame.draw.line(
+                self.screen,
+                shadow_color,
+                (piece_center_x + x * GRID_SIZE + GRID_SIZE -
+                 2, piece_center_y + y * GRID_SIZE),
+                (piece_center_x + x * GRID_SIZE + GRID_SIZE - 2,
+                 piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
+                2
+            )
+            pygame.draw.line(
+                self.screen,
+                shadow_color,
+                (piece_center_x + x * GRID_SIZE,
+                 piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
+                (piece_center_x + x * GRID_SIZE + GRID_SIZE - 2,
+                 piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
+                2
             )
 
         # Draw score
