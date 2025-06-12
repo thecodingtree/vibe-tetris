@@ -6,7 +6,7 @@ import pygame
 import sys
 import os
 import math
-from tetromino import Tetromino
+from tetromino import Tetromino, PieceRandomizer
 from constants import (
     QUIT, KEYDOWN, K_LEFT, K_RIGHT, K_DOWN, K_UP, K_SPACE, K_p, K_c, K_m, K_r,
     GRID_WIDTH, GRID_HEIGHT, GRID_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT,
@@ -27,11 +27,16 @@ class TetrisGame:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)
 
+        # Piece randomizer (ensures fair distribution of pieces)
+        # Uses a "bag" system where each piece appears once before any repeats
+        # with a small chance (5%) of allowing a piece to repeat for variety
+        self.piece_randomizer = PieceRandomizer(repeat_chance=0.05)
+
         # Game state
         self.board = [[None for _ in range(GRID_WIDTH)]
                       for _ in range(GRID_HEIGHT)]
-        self.current_piece = Tetromino()
-        self.next_piece = Tetromino()
+        self.current_piece = Tetromino(randomizer=self.piece_randomizer)
+        self.next_piece = Tetromino(randomizer=self.piece_randomizer)
         self.held_piece = None
         self.can_hold = True
         self.game_over = False
@@ -87,8 +92,10 @@ class TetrisGame:
         """Reset the game state"""
         self.board = [[None for _ in range(GRID_WIDTH)]
                       for _ in range(GRID_HEIGHT)]
-        self.current_piece = Tetromino()
-        self.next_piece = Tetromino()
+        # Create a fresh randomizer for new games
+        self.piece_randomizer = PieceRandomizer(repeat_chance=0.05)
+        self.current_piece = Tetromino(randomizer=self.piece_randomizer)
+        self.next_piece = Tetromino(randomizer=self.piece_randomizer)
         self.held_piece = None
         self.can_hold = True
         self.game_over = False
@@ -169,7 +176,7 @@ class TetrisGame:
             # Hold the current piece and get a new one from next
             self.held_piece = Tetromino(self.current_piece.name)
             self.current_piece = self.next_piece
-            self.next_piece = Tetromino()
+            self.next_piece = Tetromino(randomizer=self.piece_randomizer)
         else:
             # Swap current piece with held piece
             temp_name = self.current_piece.name
@@ -232,7 +239,7 @@ class TetrisGame:
 
         # Create a new piece
         self.current_piece = self.next_piece
-        self.next_piece = Tetromino()
+        self.next_piece = Tetromino(randomizer=self.piece_randomizer)
 
         # Check if the new piece can be placed
         if not self.current_piece.is_valid_position(self.board):

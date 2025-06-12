@@ -10,12 +10,53 @@ from constants import (
 )
 
 
+class PieceRandomizer:
+    """
+    Implements a bag-based randomizer for Tetromino pieces.
+    Each piece appears once before any piece appears again,
+    with occasional random repeats for variety.
+    """
+
+    def __init__(self, repeat_chance=0.1):
+        """
+        Initialize the randomizer with all available pieces.
+
+        Args:
+            repeat_chance: Probability (0-1) of allowing a repeated piece
+        """
+        self.all_pieces = list(TETROMINOS.keys())
+        self.bag = list(self.all_pieces)  # Start with a full bag
+        self.last_piece = None
+        self.repeat_chance = repeat_chance
+        random.shuffle(self.bag)  # Randomize initial bag
+
+    def next_piece(self):
+        """Get the next random piece using the bag system."""
+        # Special case: if we're allowed a repeat and random chance hits
+        if (self.last_piece is not None and
+                random.random() < self.repeat_chance):
+            return self.last_piece
+
+        # If the bag is empty, refill it with all pieces except last chosen
+        if not self.bag:
+            self.bag = [p for p in self.all_pieces if p != self.last_piece]
+            random.shuffle(self.bag)
+
+        # Get a piece from the bag
+        piece = self.bag.pop()
+        self.last_piece = piece
+        return piece
+
+
 class Tetromino:
     """Class representing a tetromino (falling piece)"""
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, randomizer=None):
         if name is None:
-            name = random.choice(list(TETROMINOS.keys()))
+            if randomizer:
+                name = randomizer.next_piece()
+            else:
+                name = random.choice(list(TETROMINOS.keys()))
         self.name = name
         self.shape = TETROMINOS[name]['shape']
         self.color = TETROMINOS[name]['color']
