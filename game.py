@@ -195,6 +195,14 @@ class TetrisGame:
         """Drop the piece all the way down"""
         while self.current_piece.move(0, 1, self.board):
             pass
+
+        # Play drop sound when hard dropping
+        if self.sounds_enabled:
+            try:
+                self.drop_sound.play()
+            except:
+                pass
+
         self.lock_piece()
 
     def update(self):
@@ -426,65 +434,11 @@ class TetrisGame:
 
         # Draw the held piece in the preview box if there is one
         if self.held_piece:
-            piece_center_x = sidebar_x + 60
-            piece_center_y = GAME_AREA_START_Y - 60
-
-            for x, y in self.held_piece.shape:
-                # Main block color
-                pygame.draw.rect(
-                    self.screen,
-                    self.held_piece.color,
-                    (
-                        piece_center_x + x * GRID_SIZE,
-                        piece_center_y + y * GRID_SIZE,
-                        GRID_SIZE - 1,
-                        GRID_SIZE - 1
-                    )
-                )
-
-                # Highlight (top and left edges)
-                highlight_color = tuple(min(c + 70, 255)
-                                        for c in self.held_piece.color[:3])
-                pygame.draw.line(
-                    self.screen,
-                    highlight_color,
-                    (piece_center_x + x * GRID_SIZE,
-                     piece_center_y + y * GRID_SIZE),
-                    (piece_center_x + x * GRID_SIZE,
-                     piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
-                    2
-                )
-                pygame.draw.line(
-                    self.screen,
-                    highlight_color,
-                    (piece_center_x + x * GRID_SIZE,
-                     piece_center_y + y * GRID_SIZE),
-                    (piece_center_x + x * GRID_SIZE + GRID_SIZE -
-                     2, piece_center_y + y * GRID_SIZE),
-                    2
-                )
-
-                # Shadow (bottom and right edges)
-                shadow_color = tuple(max(c - 70, 0)
-                                     for c in self.held_piece.color[:3])
-                pygame.draw.line(
-                    self.screen,
-                    shadow_color,
-                    (piece_center_x + x * GRID_SIZE + GRID_SIZE -
-                     2, piece_center_y + y * GRID_SIZE),
-                    (piece_center_x + x * GRID_SIZE + GRID_SIZE - 2,
-                     piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
-                    2
-                )
-                pygame.draw.line(
-                    self.screen,
-                    shadow_color,
-                    (piece_center_x + x * GRID_SIZE,
-                     piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
-                    (piece_center_x + x * GRID_SIZE + GRID_SIZE - 2,
-                     piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
-                    2
-                )
+            # Draw the held piece centered in the preview box
+            preview_box_center_x = sidebar_x + 60
+            preview_box_center_y = GAME_AREA_START_Y - 60
+            self._draw_centered_piece(
+                self.held_piece, preview_box_center_x, preview_box_center_y)
 
         # Draw next piece box
         next_piece_text = self.font.render("Next:", True, WHITE)
@@ -504,63 +458,10 @@ class TetrisGame:
         )
 
         # Draw the next piece in the preview box
-        piece_center_x = sidebar_x + 60
-        piece_center_y = GAME_AREA_START_Y + 100
-
-        for x, y in self.next_piece.shape:
-            # Main block color
-            pygame.draw.rect(
-                self.screen,
-                self.next_piece.color,
-                (
-                    piece_center_x + x * GRID_SIZE,
-                    piece_center_y + y * GRID_SIZE,
-                    GRID_SIZE - 1,
-                    GRID_SIZE - 1
-                )
-            )
-
-            # Highlight (top and left edges)
-            highlight_color = tuple(min(c + 70, 255)
-                                    for c in self.next_piece.color[:3])
-            pygame.draw.line(
-                self.screen,
-                highlight_color,
-                (piece_center_x + x * GRID_SIZE, piece_center_y + y * GRID_SIZE),
-                (piece_center_x + x * GRID_SIZE,
-                 piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
-                2
-            )
-            pygame.draw.line(
-                self.screen,
-                highlight_color,
-                (piece_center_x + x * GRID_SIZE, piece_center_y + y * GRID_SIZE),
-                (piece_center_x + x * GRID_SIZE + GRID_SIZE -
-                 2, piece_center_y + y * GRID_SIZE),
-                2
-            )
-
-            # Shadow (bottom and right edges)
-            shadow_color = tuple(max(c - 70, 0)
-                                 for c in self.next_piece.color[:3])
-            pygame.draw.line(
-                self.screen,
-                shadow_color,
-                (piece_center_x + x * GRID_SIZE + GRID_SIZE -
-                 2, piece_center_y + y * GRID_SIZE),
-                (piece_center_x + x * GRID_SIZE + GRID_SIZE - 2,
-                 piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
-                2
-            )
-            pygame.draw.line(
-                self.screen,
-                shadow_color,
-                (piece_center_x + x * GRID_SIZE,
-                 piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
-                (piece_center_x + x * GRID_SIZE + GRID_SIZE - 2,
-                 piece_center_y + y * GRID_SIZE + GRID_SIZE - 2),
-                2
-            )
+        preview_box_center_x = sidebar_x + 60
+        preview_box_center_y = GAME_AREA_START_Y + 100
+        self._draw_centered_piece(
+            self.next_piece, preview_box_center_x, preview_box_center_y)
 
         # Draw score
         score_text = self.font.render(f"Score: {self.score}", True, WHITE)
@@ -597,6 +498,74 @@ class TetrisGame:
             self.screen.blit(pause_text, pause_rect)
 
         pygame.display.flip()
+
+    def _draw_centered_piece(self, piece, center_x, center_y):
+        """Draw a tetromino piece centered in a box"""
+        if piece is None:
+            return
+
+        # Calculate bounds of the piece to center it
+        min_x = min(x for x, y in piece.shape)
+        max_x = max(x for x, y in piece.shape)
+        min_y = min(y for x, y in piece.shape)
+        max_y = max(y for x, y in piece.shape)
+        width = max_x - min_x + 1
+        height = max_y - min_y + 1
+
+        # Adjust starting position to center the piece
+        piece_x = center_x - ((width * GRID_SIZE) // 2)
+        piece_y = center_y - ((height * GRID_SIZE) // 2)
+
+        for x, y in piece.shape:
+            # Adjusted coordinates
+            adj_x = piece_x + (x - min_x) * GRID_SIZE
+            adj_y = piece_y + (y - min_y) * GRID_SIZE
+
+            # Main block color
+            pygame.draw.rect(
+                self.screen,
+                piece.color,
+                (
+                    adj_x,
+                    adj_y,
+                    GRID_SIZE - 1,
+                    GRID_SIZE - 1
+                )
+            )
+
+            # Highlight (top and left edges)
+            highlight_color = tuple(min(c + 70, 255) for c in piece.color[:3])
+            pygame.draw.line(
+                self.screen,
+                highlight_color,
+                (adj_x, adj_y),
+                (adj_x, adj_y + GRID_SIZE - 2),
+                2
+            )
+            pygame.draw.line(
+                self.screen,
+                highlight_color,
+                (adj_x, adj_y),
+                (adj_x + GRID_SIZE - 2, adj_y),
+                2
+            )
+
+            # Shadow (bottom and right edges)
+            shadow_color = tuple(max(c - 70, 0) for c in piece.color[:3])
+            pygame.draw.line(
+                self.screen,
+                shadow_color,
+                (adj_x + GRID_SIZE - 2, adj_y),
+                (adj_x + GRID_SIZE - 2, adj_y + GRID_SIZE - 2),
+                2
+            )
+            pygame.draw.line(
+                self.screen,
+                shadow_color,
+                (adj_x, adj_y + GRID_SIZE - 2),
+                (adj_x + GRID_SIZE - 2, adj_y + GRID_SIZE - 2),
+                2
+            )
 
     def run(self):
         """Main game loop"""
