@@ -16,6 +16,7 @@ Vibe Tetris is a modern implementation of the classic Tetris game. It features a
 - Line clearing animations
 - Sound effects and background music
 - Game menu with customizable options
+- AI demo mode where the computer plays automatically
 
 ## Controls
 
@@ -87,6 +88,7 @@ python main.py
 - Advanced wall kick system for better rotation handling
 - Line clearing animations
 - Sound effects and music (when enabled)
+- AI demo mode where you can watch the computer play
 
 ## License
 

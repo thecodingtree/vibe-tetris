@@ -28,6 +28,7 @@ class GameMenu:
         # Menu options
         self.options = [
             {"text": "Start Game", "action": "start"},
+            {"text": "Demo Mode", "action": "demo"},
             {"text": "Controls", "action": "controls"},
             {"text": f"Sounds: {'ON' if self.sounds_enabled else 'OFF'}",
                 "action": "toggle_sound"},
@@ -79,7 +80,7 @@ class GameMenu:
                         # Toggle sound setting
                         self.sounds_enabled = not self.sounds_enabled
                         # Update the menu text
-                        self.options[2]["text"] = f"Sounds: {'ON' if self.sounds_enabled else 'OFF'}"
+                        self.options[3]["text"] = f"Sounds: {'ON' if self.sounds_enabled else 'OFF'}"
                         return None
                     return action
         return None
@@ -181,6 +182,7 @@ class GameMenu:
             "P: Pause game",
             "M: Toggle music",
             "R: Restart (after game over)",
+            "ENTER: Return to menu (during game/demo)",
             "",
             f"Sounds are currently {'ON' if self.sounds_enabled else 'OFF'}"
         ]
