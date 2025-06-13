@@ -76,7 +76,8 @@ def main():
                     if event.type == KEYDOWN:
                         if event.key == K_r:
                             # Restart game
-                            game = TetrisGame(sounds_enabled=menu.sounds_enabled)
+                            game = TetrisGame(
+                                sounds_enabled=menu.sounds_enabled)
                             if demo_mode:
                                 ai_player = TetrisAI(game)
                         elif event.key == K_SPACE or event.key == K_RETURN:
@@ -85,13 +86,14 @@ def main():
                             demo_mode = False
                     continue
 
-                if event.type == KEYDOWN:
+                # In demo mode only, allow ENTER to return to menu
+                if demo_mode and event.type == KEYDOWN:
                     if event.key == K_RETURN:
-                        # Quick return to menu
+                        # Return to menu from demo mode only
                         game_started = False
                         demo_mode = False
 
-            if demo_mode and not game.paused and not game.game_over:
+            if demo_mode and not game.paused and not game.game_over and not game.pause_menu_active:
                 # AI plays the game
                 current_time = time.time()
                 if current_time - last_ai_move_time >= ai_move_delay:
@@ -99,7 +101,10 @@ def main():
                     last_ai_move_time = current_time
             else:
                 # Human plays the game
-                game.handle_events(events)
+                result = game.handle_events(events)
+                if result == "exit_to_menu":
+                    game_started = False
+                    demo_mode = False
 
             game.update()
             game.draw()
@@ -112,7 +117,7 @@ def main():
                     center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 70))
                 game.screen.blit(menu_text, menu_rect)
                 pygame.display.flip()
-                
+
             # In demo mode, show that this is AI playing
             if demo_mode and not game.game_over:
                 demo_text = game.font.render(
@@ -120,7 +125,9 @@ def main():
                 demo_rect = demo_text.get_rect(
                     center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 30))
                 game.screen.blit(demo_text, demo_rect)
-                pygame.display.flip()
+                # Only flip the display if not already done by the game
+                if game.paused and not game.pause_menu_active:
+                    pygame.display.flip()
 
         # Cap frame rate
         clock.tick(60)

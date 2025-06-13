@@ -8,10 +8,10 @@ import os
 import math
 from tetromino import Tetromino, PieceRandomizer
 from constants import (
-    QUIT, KEYDOWN, K_LEFT, K_RIGHT, K_DOWN, K_UP, K_SPACE, K_p, K_c, K_m, K_r,
+    QUIT, KEYDOWN, K_LEFT, K_RIGHT, K_DOWN, K_UP, K_SPACE, K_p, K_c, K_m, K_r, K_ESCAPE, K_RETURN,
     GRID_WIDTH, GRID_HEIGHT, GRID_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT,
     GAME_AREA_WIDTH, GAME_AREA_HEIGHT, GAME_AREA_START_X, GAME_AREA_START_Y,
-    BLACK, WHITE, RED, GRAY, SOUND_DIR, MUSIC_FILE, MOVE_SOUND, ROTATE_SOUND,
+    BLACK, WHITE, RED, GRAY, YELLOW, SOUND_DIR, MUSIC_FILE, MOVE_SOUND, ROTATE_SOUND,
     DROP_SOUND, CLEAR_SOUND, GAME_OVER_SOUND, LEVEL_UP_SOUND, LINE_SCORES
 )
 
@@ -41,6 +41,9 @@ class TetrisGame:
         self.can_hold = True
         self.game_over = False
         self.paused = False
+        self.pause_menu_active = False
+        self.pause_menu_options = ["Continue", "Exit to Menu"]
+        self.pause_selected_option = 0
         self.score = 0
         self.level = 1
         self.lines_cleared = 0
@@ -100,6 +103,8 @@ class TetrisGame:
         self.can_hold = True
         self.game_over = False
         self.paused = False
+        self.pause_menu_active = False
+        self.pause_selected_option = 0
         self.score = 0
         self.level = 1
         self.lines_cleared = 0
@@ -111,6 +116,9 @@ class TetrisGame:
         if events is None:
             events = pygame.event.get()
 
+        # Return value (None by default, "exit_to_menu" if exiting to menu)
+        result = None
+
         for event in events:
             if event.type == QUIT:
                 pygame.quit()
@@ -119,6 +127,28 @@ class TetrisGame:
             if self.game_over:
                 if event.type == KEYDOWN and event.key == K_r:
                     self.reset_game()
+                continue
+
+            # Handle pause menu navigation if active
+            if self.paused and self.pause_menu_active:
+                if event.type == KEYDOWN:
+                    if event.key == K_UP:
+                        self.pause_selected_option = (
+                            self.pause_selected_option - 1) % len(self.pause_menu_options)
+                    elif event.key == K_DOWN:
+                        self.pause_selected_option = (
+                            self.pause_selected_option + 1) % len(self.pause_menu_options)
+                    elif event.key == K_RETURN or event.key == K_SPACE:
+                        if self.pause_selected_option == 0:  # Continue
+                            self.paused = False
+                            self.pause_menu_active = False
+                        elif self.pause_selected_option == 1:  # Exit to Menu
+                            # Return a special value to indicate we should exit to menu
+                            result = "exit_to_menu"
+                    elif event.key == K_ESCAPE:
+                        # Resume game when pressing ESC again
+                        self.paused = False
+                        self.pause_menu_active = False
                 continue
 
             if event.type == KEYDOWN:
@@ -147,8 +177,14 @@ class TetrisGame:
                             pass
                 elif event.key == K_SPACE:
                     self.hard_drop()
-                elif event.key == K_p:
+                elif event.key == K_p or event.key == K_ESCAPE:
+                    # Pause the game
                     self.paused = not self.paused
+                    if self.paused:
+                        self.pause_menu_active = True
+                        self.pause_selected_option = 0
+                    else:
+                        self.pause_menu_active = False
                 elif event.key == K_c:
                     self.hold_piece()
                 elif event.key == K_m:
@@ -166,6 +202,8 @@ class TetrisGame:
             if event.type == pygame.KEYUP:
                 if event.key == K_DOWN:
                     self.soft_drop = False
+
+        return result
 
     def hold_piece(self):
         """Hold the current piece or swap with the held piece"""
@@ -489,13 +527,51 @@ class TetrisGame:
                 center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 30))
             self.screen.blit(restart_text, restart_rect)
 
-        # Draw pause message
+        # Draw pause menu
         if self.paused:
-            pause_font = pygame.font.Font(None, 48)
-            pause_text = pause_font.render("PAUSED", True, WHITE)
-            pause_rect = pause_text.get_rect(
-                center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
-            self.screen.blit(pause_text, pause_rect)
+            # Create semi-transparent overlay
+            overlay = pygame.Surface(
+                (SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 180))  # Black with alpha
+            self.screen.blit(overlay, (0, 0))
+
+            # Draw the pause menu title - use the same font settings as the main menu
+            # Same as font_large in menu
+            title_font = pygame.font.Font(None, 72)
+            title_text = title_font.render("PAUSED", True, WHITE)
+            title_rect = title_text.get_rect(
+                # Same position as main menu
+                center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4))
+            self.screen.blit(title_text, title_rect)
+
+            if self.pause_menu_active:
+                # Draw menu options - use the same style as the main menu
+                # Same as font_medium in menu
+                option_font = pygame.font.Font(None, 48)
+                for i, option in enumerate(self.pause_menu_options):
+                    if i == self.pause_selected_option:
+                        color = YELLOW  # Use the YELLOW constant for consistency
+                        text = f"> {option} <"
+                    else:
+                        color = WHITE
+                        text = option
+
+                    option_text = option_font.render(text, True, color)
+                    option_rect = option_text.get_rect(
+                        center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + i * 60)
+                    )
+                    self.screen.blit(option_text, option_rect)
+
+                # Draw instructions - use the same style as the main menu
+                instruction_font = pygame.font.Font(
+                    None, 36)  # Same as font_small in menu
+                instruction_text = instruction_font.render(
+                    "Use arrow keys to navigate, ENTER to select", True, GRAY)  # Same text as main menu
+                instruction_rect = instruction_text.get_rect(
+                    # Same position as main menu
+                    center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50)
+                )
+                self.screen.blit(instruction_text, instruction_rect)
 
         pygame.display.flip()
 

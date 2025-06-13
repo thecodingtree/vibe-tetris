@@ -26,9 +26,10 @@ Vibe Tetris is a modern implementation of the classic Tetris game. It features a
 - **Spacebar**: Hard drop (instantly drop the tetromino)
 - **C Key**: Hold the current piece
 - **M Key**: Toggle music on/off
+- **ESC Key**: Open the pause menu (with Continue/Exit options)
 - **P Key**: Pause/Resume the game
 - **R Key**: Restart the game (when game over)
-- **Enter Key**: Return to main menu (when game over)
+- **Enter Key**: Select menu options (in main menu, pause menu, and game over screen)
 
 ## Installation
 

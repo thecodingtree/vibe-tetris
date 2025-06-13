@@ -179,10 +179,11 @@ class GameMenu:
             "Down Arrow: Soft drop",
             "Spacebar: Hard drop",
             "C: Hold piece",
-            "P: Pause game",
+            "P or ESC: Pause game",
+            "ESC: Open pause menu",
             "M: Toggle music",
             "R: Restart (after game over)",
-            "ENTER: Return to menu (during game/demo)",
+            "ENTER: Select menu option",
             "",
             f"Sounds are currently {'ON' if self.sounds_enabled else 'OFF'}"
         ]
