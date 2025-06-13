@@ -37,15 +37,29 @@ Vibe Tetris is a modern implementation of the classic Tetris game. It features a
    git clone https://github.com/yourusername/vibe-tetris.git
    cd vibe-tetris
    ```
-3. Install dependencies:
+3. (Optional) Set up a virtual environment:
+
+   ```bash
+   # Create a virtual environment
+   python -m venv venv
+
+   # Activate the virtual environment
+   # On macOS/Linux:
+   source venv/bin/activate
+   # On Windows:
+   venv\Scripts\activate
+   ```
+
+4. Install dependencies:
    ```
    pip install -r requirements.txt
    ```
 
 ## Running the Game
 
-```
-python tetris.py
+```bash
+# Run the game using the main entry point
+python main.py
 ```
 
 ## Game Rules
