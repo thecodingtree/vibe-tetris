@@ -24,10 +24,15 @@ class GameMenu:
 
         # Sound state
         self.sounds_enabled = False
+        
+        # Battle difficulty setting
+        self.battle_difficulty = 'medium'  # Default: medium difficulty
 
         # Menu options
         self.options = [
             {"text": "Start Game", "action": "start"},
+            {"text": "Battle Mode", "action": "battle"},
+            {"text": f"Battle Difficulty: {self.battle_difficulty.upper()}", "action": "toggle_difficulty"},
             {"text": "Demo Mode", "action": "demo"},
             {"text": "Controls", "action": "controls"},
             {"text": f"Sounds: {'ON' if self.sounds_enabled else 'OFF'}",
@@ -80,7 +85,15 @@ class GameMenu:
                         # Toggle sound setting
                         self.sounds_enabled = not self.sounds_enabled
                         # Update the menu text
-                        self.options[3]["text"] = f"Sounds: {'ON' if self.sounds_enabled else 'OFF'}"
+                        self.options[5]["text"] = f"Sounds: {'ON' if self.sounds_enabled else 'OFF'}"
+                        return None
+                    elif action == "toggle_difficulty":
+                        # Cycle through difficulty options
+                        difficulties = ['easy', 'medium', 'hard']
+                        current_index = difficulties.index(self.battle_difficulty)
+                        self.battle_difficulty = difficulties[(current_index + 1) % len(difficulties)]
+                        # Update the menu text
+                        self.options[2]["text"] = f"Battle Difficulty: {self.battle_difficulty.upper()}"
                         return None
                     return action
         return None

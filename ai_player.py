@@ -15,13 +15,15 @@ from constants import (
 class TetrisAI:
     """
     AI player for Tetris that evaluates possible moves and selects the best one.
+    Can make deliberate mistakes based on a difficulty setting.
     """
 
-    def __init__(self, game):
+    def __init__(self, game, mistake_chance=0.1):
         self.game = game
         self.next_move = None
         self.move_queue = []
         self.thinking_time = 0
+        self.mistake_chance = mistake_chance  # Chance to make a sub-optimal move
 
     def decide_move(self):
         """
@@ -99,7 +101,22 @@ class TetrisAI:
 
         # If we found a good move, queue it up
         if best_moves:
-            self.move_queue = best_moves
+            # Introduce a chance of making a mistake based on difficulty setting
+            if random.random() < self.mistake_chance:
+                # Make a mistake by using a random move or a suboptimal move
+                mistake_options = ['left', 'right', 'rotate', 'drop']
+                
+                if random.choice([True, False]):
+                    # Either choose a completely random move
+                    self.move_queue = [random.choice(mistake_options)]
+                else:
+                    # Or choose a suboptimal move by evaluating more positions and taking a worse one
+                    # For example, here we're just rotating the piece randomly
+                    self.move_queue = ['rotate'] + best_moves[1:] if len(best_moves) > 1 else ['drop']
+            else:
+                # No mistake, use the best move
+                self.move_queue = best_moves
+                
             return self.move_queue.pop(0)
         else:
             # Fallback - just drop

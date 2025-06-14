@@ -351,19 +351,24 @@ class TetrisGame:
         # Fill background
         self.screen.fill(BLACK)
 
+        # Draw the game using the default position
+        self.draw_at_position(GAME_AREA_START_X, GAME_AREA_START_Y)
+        
+    def draw_at_position(self, pos_x, pos_y):
+        """Draw the game at a specific position"""
         # Draw game area border
         pygame.draw.rect(
             self.screen,
             WHITE,
             (
-                GAME_AREA_START_X - 2,
-                GAME_AREA_START_Y - 2,
+                pos_x - 2,
+                pos_y - 2,
                 GAME_AREA_WIDTH + 4,
                 GAME_AREA_HEIGHT + 4
             ),
             2
         )
-
+        
         # Draw the grid
         for y in range(GRID_HEIGHT):
             for x in range(GRID_WIDTH):
@@ -390,8 +395,8 @@ class TetrisGame:
                     self.screen,
                     color,
                     (
-                        GAME_AREA_START_X + x * GRID_SIZE,
-                        GAME_AREA_START_Y + y * GRID_SIZE,
+                        pos_x + x * GRID_SIZE,
+                        pos_y + y * GRID_SIZE,
                         GRID_SIZE - 1,
                         GRID_SIZE - 1
                     )
@@ -405,19 +410,19 @@ class TetrisGame:
                     pygame.draw.line(
                         self.screen,
                         highlight_color,
-                        (GAME_AREA_START_X + x * GRID_SIZE,
-                         GAME_AREA_START_Y + y * GRID_SIZE),
-                        (GAME_AREA_START_X + x * GRID_SIZE,
-                         GAME_AREA_START_Y + y * GRID_SIZE + GRID_SIZE - 2),
+                        (pos_x + x * GRID_SIZE,
+                         pos_y + y * GRID_SIZE),
+                        (pos_x + x * GRID_SIZE,
+                         pos_y + y * GRID_SIZE + GRID_SIZE - 2),
                         2
                     )
                     pygame.draw.line(
                         self.screen,
                         highlight_color,
-                        (GAME_AREA_START_X + x * GRID_SIZE,
-                         GAME_AREA_START_Y + y * GRID_SIZE),
-                        (GAME_AREA_START_X + x * GRID_SIZE + GRID_SIZE -
-                         2, GAME_AREA_START_Y + y * GRID_SIZE),
+                        (pos_x + x * GRID_SIZE,
+                         pos_y + y * GRID_SIZE),
+                        (pos_x + x * GRID_SIZE + GRID_SIZE - 2,
+                         pos_y + y * GRID_SIZE),
                         2
                     )
 
@@ -426,44 +431,65 @@ class TetrisGame:
                     pygame.draw.line(
                         self.screen,
                         shadow_color,
-                        (GAME_AREA_START_X + x * GRID_SIZE + GRID_SIZE -
-                         2, GAME_AREA_START_Y + y * GRID_SIZE),
-                        (GAME_AREA_START_X + x * GRID_SIZE + GRID_SIZE - 2,
-                         GAME_AREA_START_Y + y * GRID_SIZE + GRID_SIZE - 2),
+                        (pos_x + x * GRID_SIZE + GRID_SIZE - 2,
+                         pos_y + y * GRID_SIZE),
+                        (pos_x + x * GRID_SIZE + GRID_SIZE - 2,
+                         pos_y + y * GRID_SIZE + GRID_SIZE - 2),
                         2
                     )
                     pygame.draw.line(
                         self.screen,
                         shadow_color,
-                        (GAME_AREA_START_X + x * GRID_SIZE,
-                         GAME_AREA_START_Y + y * GRID_SIZE + GRID_SIZE - 2),
-                        (GAME_AREA_START_X + x * GRID_SIZE + GRID_SIZE - 2,
-                         GAME_AREA_START_Y + y * GRID_SIZE + GRID_SIZE - 2),
+                        (pos_x + x * GRID_SIZE,
+                         pos_y + y * GRID_SIZE + GRID_SIZE - 2),
+                        (                        pos_x + x * GRID_SIZE + GRID_SIZE - 2,
+                         pos_y + y * GRID_SIZE + GRID_SIZE - 2),
                         2
                     )
-
+                    
         # Draw the ghost piece to show where the current piece will land
         if not self.game_over and not self.paused:
-            self.current_piece.draw_ghost(self.screen, self.board)
-
+            # Save current position
+            original_x = self.current_piece.x
+            original_area_start_x = self.current_piece.game_area_start_x
+            
+            # Temporarily adjust for the new position
+            self.current_piece.game_area_start_x = pos_x
+            
+            # Draw ghost piece
+            self.current_piece.draw_ghost(self.screen, self.board, pos_x, pos_y)
+            
+            # Restore position
+            self.current_piece.game_area_start_x = original_area_start_x
+            
         # Draw the current piece
         if not self.game_over:
-            self.current_piece.draw(self.screen)
-
-        # Draw the sidebar
-        sidebar_x = GAME_AREA_START_X + GAME_AREA_WIDTH + 20
-
+            # Save current position
+            original_area_start_x = self.current_piece.game_area_start_x
+            
+            # Temporarily adjust for the new position
+            self.current_piece.game_area_start_x = pos_x
+            
+            # Draw the current piece
+            self.current_piece.draw(self.screen, pos_x, pos_y)
+            
+            # Restore position
+            self.current_piece.game_area_start_x = original_area_start_x
+        
+        # Draw the sidebar - modified to use the provided position
+        sidebar_x = pos_x + GAME_AREA_WIDTH + 20
+        
         # Draw held piece box
         held_piece_text = self.font.render("Hold:", True, WHITE)
-        self.screen.blit(held_piece_text, (sidebar_x, GAME_AREA_START_Y - 160))
-
+        self.screen.blit(held_piece_text, (sidebar_x, pos_y - 160))
+        
         # Draw held piece preview box
         pygame.draw.rect(
             self.screen,
             WHITE,
             (
                 sidebar_x,
-                GAME_AREA_START_Y - 120,
+                pos_y - 120,
                 120,
                 120
             ),
@@ -474,13 +500,13 @@ class TetrisGame:
         if self.held_piece:
             # Draw the held piece centered in the preview box
             preview_box_center_x = sidebar_x + 60
-            preview_box_center_y = GAME_AREA_START_Y - 60
+            preview_box_center_y = pos_y - 60
             self._draw_centered_piece(
                 self.held_piece, preview_box_center_x, preview_box_center_y)
 
         # Draw next piece box
         next_piece_text = self.font.render("Next:", True, WHITE)
-        self.screen.blit(next_piece_text, (sidebar_x, GAME_AREA_START_Y))
+        self.screen.blit(next_piece_text, (sidebar_x, pos_y))
 
         # Draw next piece preview box
         pygame.draw.rect(
@@ -488,7 +514,7 @@ class TetrisGame:
             WHITE,
             (
                 sidebar_x,
-                GAME_AREA_START_Y + 40,
+                pos_y + 40,
                 120,
                 120
             ),
@@ -497,13 +523,13 @@ class TetrisGame:
 
         # Draw the next piece in the preview box
         preview_box_center_x = sidebar_x + 60
-        preview_box_center_y = GAME_AREA_START_Y + 100
+        preview_box_center_y = pos_y + 100
         self._draw_centered_piece(
             self.next_piece, preview_box_center_x, preview_box_center_y)
 
         # Draw score
         score_text = self.font.render(f"Score: {self.score}", True, WHITE)
-        self.screen.blit(score_text, (sidebar_x, GAME_AREA_START_Y + 180))
+        self.screen.blit(score_text, (sidebar_x, pos_y + 180))
 
         # Draw level
         level_text = self.font.render(f"Level: {self.level}", True, WHITE)

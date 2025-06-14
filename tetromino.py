@@ -64,6 +64,8 @@ class Tetromino:
         # Start position (center top of the grid)
         self.x = GRID_WIDTH // 2 - 1
         self.y = 0
+        # Default game area position
+        self.game_area_start_x = GAME_AREA_START_X
 
     def rotate(self, board):
         """Rotate the tetromino clockwise with wall kicks"""
@@ -168,16 +170,28 @@ class Tetromino:
 
         return ghost_x, ghost_y
 
-    def draw(self, surface):
-        """Draw the tetromino on the surface"""
+    def draw(self, surface, start_x=None, start_y=None):
+        """Draw the tetromino on the surface at the specified position
+        
+        Args:
+            surface: The surface to draw on
+            start_x: Custom X position to use (default: GAME_AREA_START_X)
+            start_y: Custom Y position to use (default: GAME_AREA_START_Y)
+        """
+        # Use default position if not specified
+        if start_x is None:
+            start_x = GAME_AREA_START_X
+        if start_y is None:
+            start_y = GAME_AREA_START_Y
+            
         for x, y in self.get_rotated_shape():
             # Main block color
             pygame.draw.rect(
                 surface,
                 self.color,
                 (
-                    GAME_AREA_START_X + (self.x + x) * GRID_SIZE,
-                    GAME_AREA_START_Y + (self.y + y) * GRID_SIZE,
+                    start_x + (self.x + x) * GRID_SIZE,
+                    start_y + (self.y + y) * GRID_SIZE,
                     GRID_SIZE - 1,
                     GRID_SIZE - 1
                 )
@@ -188,19 +202,19 @@ class Tetromino:
             pygame.draw.line(
                 surface,
                 highlight_color,
-                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE,
-                 GAME_AREA_START_Y + (self.y + y) * GRID_SIZE),
-                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE,
-                 GAME_AREA_START_Y + (self.y + y) * GRID_SIZE + GRID_SIZE - 2),
+                (start_x + (self.x + x) * GRID_SIZE,
+                 start_y + (self.y + y) * GRID_SIZE),
+                (start_x + (self.x + x) * GRID_SIZE,
+                 start_y + (self.y + y) * GRID_SIZE + GRID_SIZE - 2),
                 2
             )
             pygame.draw.line(
                 surface,
                 highlight_color,
-                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE,
-                 GAME_AREA_START_Y + (self.y + y) * GRID_SIZE),
-                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE + GRID_SIZE -
-                 2, GAME_AREA_START_Y + (self.y + y) * GRID_SIZE),
+                (start_x + (self.x + x) * GRID_SIZE,
+                 start_y + (self.y + y) * GRID_SIZE),
+                (start_x + (self.x + x) * GRID_SIZE + GRID_SIZE -
+                 2, start_y + (self.y + y) * GRID_SIZE),
                 2
             )
 
@@ -209,24 +223,37 @@ class Tetromino:
             pygame.draw.line(
                 surface,
                 shadow_color,
-                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE + GRID_SIZE -
-                 2, GAME_AREA_START_Y + (self.y + y) * GRID_SIZE),
-                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE + GRID_SIZE - 2,
-                 GAME_AREA_START_Y + (self.y + y) * GRID_SIZE + GRID_SIZE - 2),
+                (start_x + (self.x + x) * GRID_SIZE + GRID_SIZE -
+                 2, start_y + (self.y + y) * GRID_SIZE),
+                (start_x + (self.x + x) * GRID_SIZE + GRID_SIZE - 2,
+                 start_y + (self.y + y) * GRID_SIZE + GRID_SIZE - 2),
                 2
             )
             pygame.draw.line(
                 surface,
                 shadow_color,
-                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE,
-                 GAME_AREA_START_Y + (self.y + y) * GRID_SIZE + GRID_SIZE - 2),
-                (GAME_AREA_START_X + (self.x + x) * GRID_SIZE + GRID_SIZE - 2,
-                 GAME_AREA_START_Y + (self.y + y) * GRID_SIZE + GRID_SIZE - 2),
+                (start_x + (self.x + x) * GRID_SIZE,
+                 start_y + (self.y + y) * GRID_SIZE + GRID_SIZE - 2),
+                (start_x + (self.x + x) * GRID_SIZE + GRID_SIZE - 2,
+                 start_y + (self.y + y) * GRID_SIZE + GRID_SIZE - 2),
                 2
             )
 
-    def draw_ghost(self, surface, board):
-        """Draw the ghost of the tetromino (showing where it will land)"""
+    def draw_ghost(self, surface, board, start_x=None, start_y=None):
+        """Draw the ghost of the tetromino (showing where it will land)
+        
+        Args:
+            surface: The surface to draw on
+            board: The current game board
+            start_x: Custom X position to use (default: GAME_AREA_START_X)
+            start_y: Custom Y position to use (default: GAME_AREA_START_Y)
+        """
+        # Use default position if not specified
+        if start_x is None:
+            start_x = GAME_AREA_START_X
+        if start_y is None:
+            start_y = GAME_AREA_START_Y
+            
         ghost_x, ghost_y = self.get_ghost_position(board)
 
         for x, y in self.get_rotated_shape():
@@ -237,8 +264,8 @@ class Tetromino:
                 surface,
                 ghost_color,
                 (
-                    GAME_AREA_START_X + (ghost_x + x) * GRID_SIZE,
-                    GAME_AREA_START_Y + (ghost_y + y) * GRID_SIZE,
+                    start_x + (ghost_x + x) * GRID_SIZE,
+                    start_y + (ghost_y + y) * GRID_SIZE,
                     GRID_SIZE - 1,
                     GRID_SIZE - 1
                 ),
@@ -251,8 +278,8 @@ class Tetromino:
                 surface,
                 border_color,
                 (
-                    GAME_AREA_START_X + (ghost_x + x) * GRID_SIZE,
-                    GAME_AREA_START_Y + (ghost_y + y) * GRID_SIZE,
+                    start_x + (ghost_x + x) * GRID_SIZE,
+                    start_y + (ghost_y + y) * GRID_SIZE,
                     GRID_SIZE - 1,
                     GRID_SIZE - 1
                 ),
